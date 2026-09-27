@@ -155,6 +155,13 @@ just make a mental note to lean on the repo more for that specific piece during 
 All three build the **same kind of thing** — a document-grounded conversational Q&A system —
 so you feel the repetition, but the amount of help you're allowed decreases each time.
 
+**All 3 are `.py` scripts, not notebooks.** Production LangChain code lives in scripts, so
+practice that way from the start. Notebooks stay what they already are in this repo: reference
+material you read from.
+
+**Assignments 1 + 2 together cover everything.** Every requirement from all 7 topics is built
+and checked in these two. Assignment 3 adds nothing new — it's the same system rebuilt cold.
+
 Create one subfolder per assignment as you start it:
 `1-Langchain/revise/assignment-1/`, `assignment-2/`, `assignment-3/`.
 
@@ -162,75 +169,94 @@ Create one subfolder per assignment as you start it:
 
 ### Assignment 1 — Guided (reference this codebase freely)
 
-**Goal:** Build a RAG-based Q&A chatbot over `attention.pdf` (already in `3.2-DataIngestion/` and
-`3.3-Data Transformer/`).
+**Goal:** Build a RAG chatbot over `attention.pdf` (in `3.2-DataIngestion/`) as a runnable script.
 
 **Must include:**
-1. Load the PDF (`PyPDFLoader` or `PyMuPDFLoader`)
-2. Split it (`RecursiveCharacterTextSplitter`)
-3. Embed chunks (your choice: OpenAI, Ollama, or HuggingFace)
-4. Store + retrieve with FAISS
-5. LCEL chain: `prompt | model | StrOutputParser()`
-6. Wrap the chain with `RunnableWithMessageHistory` so it remembers earlier turns in the same session
+1. Config via `.env` with `load_dotenv()` — no API keys hardcoded in the script
+2. Load the PDF (`PyPDFLoader` or `PyMuPDFLoader`)
+3. Split it (`RecursiveCharacterTextSplitter`)
+4. Embed chunks (your choice: OpenAI, Ollama, or HuggingFace)
+5. Store + retrieve with FAISS (`.as_retriever()`)
+6. LCEL RAG chain: retriever → prompt → model → `StrOutputParser()`, with a system prompt telling
+   the model to answer **only** from the retrieved context and say "I don't know" otherwise
+7. Wrap the chain with `RunnableWithMessageHistory` so it remembers earlier turns
+8. A CLI loop: type a question, get an answer, keep chatting until you type `exit`
 
-**Help allowed:** Freely open and adapt code from `3.2`, `3.3`, `4`, `5`, `6`, `7`. Copying and
-adjusting is fine — the goal here is re-assembling the pieces correctly, not memorization.
+**Help allowed:** Freely open and adapt code from `3.2`, `3.3`, `4`, `5`, `6`, `7`, and the RAG
+chain snippet in `CHEATSHEET.md`. Copying and adjusting is fine — the goal is assembling the
+pieces correctly into one working script.
 
-**Deliverable:** `revise/assignment-1/rag_chatbot.ipynb`
+**Run it:** `python rag_chatbot.py`
+
+**Deliverable:** `revise/assignment-1/rag_chatbot.py`
 
 ---
 
 ### Assignment 2 — Semi-independent (help only when truly stuck)
 
-**Goal:** Build a conversational RAG system that's a step harder than Assignment 1:
+**Goal:** Everything from Assignment 1, plus the harder real-world pieces.
 
-1. Ingest from **two different sources** combined (e.g. `WebBaseLoader` on a blog/article **plus**
+**Must include:**
+1. **Everything Assignment 1 required** — `.env` config, load, split, embed, FAISS retriever,
+   grounded LCEL RAG chain, message history, CLI loop
+2. Ingest from **two different sources** combined (e.g. `WebBaseLoader` on an article **plus**
    a PDF) into one retriever
-2. Use a **different embedding model** than you used in Assignment 1
-3. Add `trim_messages` so history doesn't grow unbounded
-4. Support **multiple concurrent sessions** (two different `session_id`s with separate histories, prove they don't leak into each other)
+3. Use a **different embedding model** than you used in Assignment 1
+4. Save the FAISS index with `save_local` and load it with `load_local` on the next run, so you
+   don't re-embed every time you start the script
+5. Add `trim_messages` so history doesn't grow unbounded
+6. Support **multiple sessions**: let the CLI switch `session_id` (e.g. type `/session bob`), and
+   prove two sessions' histories don't leak into each other
 
-**Help allowed:** Try from memory/LangChain docs first. Only open this repo's notebooks if
-stuck for more than ~10–15 minutes on one specific piece — and when you do, leave a one-line
-comment in your notebook noting what you needed help with (this tells you what to drill later).
+**Help allowed:** Try from memory/LangChain docs first. Only open this repo's notebooks or your
+Assignment 1 code if stuck for more than ~10–15 minutes on one specific piece — and when you do,
+leave a one-line comment in your script noting what you needed help with (this tells you what to
+drill later).
 
-**Deliverable:** `revise/assignment-2/conversational_rag.ipynb` (+ a short note of what you needed help with)
+**Run it:** `python conversational_rag.py`
+
+**Deliverable:** `revise/assignment-2/conversational_rag.py`
 
 ---
 
-### Assignment 3 — Final, independent (no repo reference)
+### Assignment 3 — Final, independent (no reference, no rubric)
 
-**Goal:** From a blank file, no peeking at any notebook in this repo, build a clean
-**Conversational Document Q&A app as a `.py` script** (not a notebook — treat it like a real
-deliverable):
+**Goal:** Rebuild the Assignment 2 system from a blank file. No notebooks, no cheat sheet, no
+Assignment 1/2 code open. Same requirements as A1 + A2 — nothing new to learn here, only proof
+you can reproduce it without help.
 
-1. Config via `.env` (reuse the pattern from `6-LCEL`, don't copy the code)
-2. Ingest a document of your choice
-3. Split, embed, store in FAISS, retrieve
-4. LCEL RAG chain with a proper system prompt (instruct the model to answer only from context)
-5. `RunnableWithMessageHistory` keyed by `session_id`, with trimming
-6. A simple CLI loop: user types a question, gets an answer, history persists until they quit
-7. **Stretch goal:** serve it with LangServe (`serve.py` + `client.py`), mirroring `6-LCEL/`
+**Constraint:** Time-box yourself to 60–90 minutes, like an interview or take-home test. If you
+truly get stuck, stop, write down exactly where, and only then look it up — that gap is your real
+revision signal.
 
-**Constraint:** Time-box yourself to 60–90 minutes, like an interview/exam. If you truly can't
-proceed, stop, write down exactly where you got stuck, and only then look it up — that gap is
-your real revision signal, more useful than the assignment itself.
+**Stretch goal (optional):** serve the chain with LangServe (`serve.py` + `client.py`), like `6-LCEL/`.
+
+**Pass/fail:** No checklist for this one — A1 and A2 already verified every piece works. You pass
+if the script runs start to finish and answers multi-turn questions, built inside the time box
+without looking anything up.
 
 **Deliverable:** `revise/assignment-3/app.py` (+ `serve.py`/`client.py` if you attempt the stretch goal)
 
 ---
 
-## 4. Self-check rubric (use for all 3 assignments)
+## 4. Self-check rubric (Assignments 1 and 2)
 
-| Check | A1 | A2 | A3 |
-|---|---|---|---|
-| Loads document(s) correctly | ☐ | ☐ | ☐ |
-| Splits with sensible chunk_size/overlap | ☐ | ☐ | ☐ |
-| Embeds + stores in FAISS without error | ☐ | ☐ | ☐ |
-| Retriever returns relevant chunks (manually check 1 query) | ☐ | ☐ | ☐ |
-| LCEL chain runs end to end | ☐ | ☐ | ☐ |
-| Multi-turn memory actually works (ask a follow-up that needs prior context) | ☐ | ☐ | ☐ |
-| Runs cleanly top to bottom with no leftover errors | ☐ | ☐ | ☐ |
+| Check | A1 | A2 |
+|---|---|---|
+| API keys load from `.env`, none hardcoded | ☐ | ☐ |
+| Loads document(s) correctly | ☐ | ☐ |
+| Splits with sensible chunk_size/overlap | ☐ | ☐ |
+| Embeds + stores in FAISS without error | ☐ | ☐ |
+| Retriever returns relevant chunks (manually check 1 query) | ☐ | ☐ |
+| Asks something not in the document → model says it doesn't know | ☐ | ☐ |
+| Multi-turn memory works (ask a follow-up that needs prior context) | ☐ | ☐ |
+| CLI loop runs and exits cleanly | ☐ | ☐ |
+| Two sources combined into one retriever | — | ☐ |
+| FAISS index reloads from disk on second run (no re-embedding) | — | ☐ |
+| History trimmed with `trim_messages` | — | ☐ |
+| Two `session_id`s keep separate histories | — | ☐ |
+
+Assignment 3 has no rubric: see its pass/fail line above.
 
 ## 5. Suggested schedule (compressed)
 
@@ -238,9 +264,9 @@ your real revision signal, more useful than the assignment itself.
 |---|---|---|
 | 0 | **2 hrs** | **Phase 1 — deep revision of all 7 topics** (Section 2 + `CHEATSHEET.md`). Can split into 2×1hr back to back if needed, but finish it before Session 1. |
 | 1 | ~1.5–2 hrs | Assignment 1 (guided) |
-| 2 | ~1.5–2 hrs | Finish Assignment 1 if needed, diff your solution against the original notebooks |
-| 3 | ~1.5–2 hrs | Assignment 2 (semi-independent) |
-| 4 | ~1–1.5 hrs | Assignment 3 (timed, fully independent) + fill in the self-check rubric honestly |
+| 2 | ~1.5–2 hrs | Finish Assignment 1, fill in its rubric column, compare your script against the original notebooks |
+| 3 | ~1.5–2 hrs | Assignment 2 (semi-independent) + fill in the rubric honestly |
+| 4 | ~1–1.5 hrs | Assignment 3 (timed, fully independent) — pass/fail, no rubric |
 
 Session 0 (Phase 1) should ideally happen in one sitting so the concepts are still fresh when
 Assignment 1 starts right after. Sessions 1–4 (Phase 2) can then spread across the following

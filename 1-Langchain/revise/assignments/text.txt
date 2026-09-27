@@ -1,0 +1,13 @@
+Must include:
+
+Config via .env with load_dotenv() — no API keys hardcoded in the script
+Load the PDF (PyPDFLoader or PyMuPDFLoader)
+Split it (RecursiveCharacterTextSplitter)
+Embed chunks (your choice: OpenAI, Ollama, or HuggingFace)
+Store + retrieve with FAISS (.as_retriever())
+LCEL RAG chain: retriever → prompt → model → StrOutputParser(), with a system prompt telling the model to answer only from the retrieved context and say "I don't know" otherwise
+Wrap the chain with RunnableWithMessageHistory so it remembers earlier turns
+A CLI loop: type a question, get an answer, keep chatting until you type exit
+Help allowed: Freely open and adapt code from 3.2, 3.3, 4, 5, 6, 7, and the RAG chain snippet in CHEATSHEET.md. Copying and adjusting is fine — the goal is assembling the pieces correctly into one working script.
+
+Run it: python rag_chatbot.py
