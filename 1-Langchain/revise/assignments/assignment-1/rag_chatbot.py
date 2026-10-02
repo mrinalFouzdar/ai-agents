@@ -46,7 +46,8 @@ load_dotenv()
 # STEP 2: Document Ingestion (Load PDF)
 # ==============================================================================
 # Load the target PDF document into LangChain Document objects
-pdf_file = "Mrinal_Fouzdar.pdf"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+pdf_file = os.path.join(current_dir, "Mrinal_Fouzdar.pdf")
 loader = PyPDFLoader(pdf_file)
 pdf_docs = loader.load()
 
@@ -120,6 +121,7 @@ prompt = ChatPromptTemplate.from_messages([
 # ==============================================================================
 def format_docs(docs):
     """Formats retrieved document chunks into a single concatenated text string."""
+    print('---------debuggging-------------',docs)
     return "\n\n".join(document.page_content for document in docs)
 
 
