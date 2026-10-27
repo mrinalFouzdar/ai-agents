@@ -13,6 +13,10 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_groq import ChatGroq
+import tiktoken
+
+encoding = tiktoken.get_encoding("o200k_base")
+
 
 load_dotenv()
 groq_api_key=os.getenv("GROQ_API_KEY")
@@ -80,7 +84,7 @@ else:
 retriever = db.as_retriever(search_kwargs={"k": 10})
 print("Retriever ready for querying!")
 
-llm = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=groq_api_key)
+llm = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=groq_api_key, custom_get_token_ids=lambda text: encoding.encode(text))
 
 # Re-ranker Prompt: Evaluates and selects the top-3 most relevant documents
 reranker_prompt = ChatPromptTemplate.from_messages([
@@ -109,6 +113,8 @@ def rerank_and_format(data):
         raw_result = reranker_chain.invoke({"docs": doc_text, "question": query})
         cleaned_json = raw_result.strip().strip("`").replace("json", "").strip()
         selected_ids = json.loads(cleaned_json)
+        print(f"cleaned_json IDs: {cleaned_json}")  
+        print(f"Selected IDs: {selected_ids}")  
         top_docs = [doc_map[did] for did in selected_ids if did in doc_map]
         if not top_docs:
             top_docs = docs[:3]
